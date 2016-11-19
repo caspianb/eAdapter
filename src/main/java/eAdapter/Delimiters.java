@@ -17,21 +17,21 @@ public final class Delimiters {
     public static Delimiters of(char fieldSeparator, char textQualifier, char newRecord, char escapeCharacter, char flattenedNewLine) {
         return new Delimiters(fieldSeparator, textQualifier, newRecord, escapeCharacter, flattenedNewLine);
     }
-    
+
     public static Delimiters of(char fieldSeparator, char textQualifier, char newRecord, char escapeCharacter) {
-        return new Delimiters(fieldSeparator, textQualifier, newRecord, escapeCharacter, '\0');
+        return of(fieldSeparator, textQualifier, newRecord, escapeCharacter, '\0');
     }
-    
+
     public static Delimiters of(char fieldSeparator, char textQualifier, char newRecord) {
-        return new Delimiters(fieldSeparator, textQualifier, newRecord, textQualifier);
+        return of(fieldSeparator, textQualifier, newRecord, textQualifier);
     }
-    
+
     public static Delimiters of(char fieldSeparator, char textQualifier) {
-        return new Delimiters(fieldSeparator, textQualifier, '\n');
+        return of(fieldSeparator, textQualifier, '\n');
     }
-    
+
     public static Delimiters of(char fieldSeparator) {
-        return new Delimiters(fieldSeparator, '\0');
+        return of(fieldSeparator, '\0');
     }
 
     private Delimiters(char fieldSeparator, char textQualifier, char newRecord, char escapeCharacter, char flattenedNewLine) {
