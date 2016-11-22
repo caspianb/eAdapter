@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Document {
+
     private String key;
     private Document parent;
     private List<Document> children;
