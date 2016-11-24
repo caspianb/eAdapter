@@ -1,7 +1,10 @@
-package eAdapter;
+package parsers;
 
 import java.util.Scanner;
+
 import org.apache.commons.lang3.StringUtils;
+
+import eAdapter.Document;
 
 public class TextDelimitedParser implements Parser {
 

@@ -48,13 +48,13 @@ public class Document {
     public String getKey() {
         return key;
     }
-    
+
     public void addField(String fieldName, String value) {
-    	if (this.metadata == null) {
-    		this.metadata = new LinkedHashMap<String, String>();
-    	}
-    	
-    	this.metadata.put(fieldName, value);
+        if (this.metadata == null) {
+            this.metadata = new LinkedHashMap<String, String>();
+        }
+
+        this.metadata.put(fieldName, value);
     }
 
 }

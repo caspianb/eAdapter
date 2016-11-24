@@ -1,10 +1,14 @@
-package eAdapter;
+package parsers;
 
 import java.util.Scanner;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import eAdapter.Document;
+import parsers.ParserArguments;
+import parsers.TextDelimitedParser;
 
 public class TU_TextDelimitedParser {
 

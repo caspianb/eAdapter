@@ -1,4 +1,4 @@
-package eAdapter;
+package parsers;
 
 public final class Delimiters {
 

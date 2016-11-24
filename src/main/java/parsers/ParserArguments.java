@@ -1,4 +1,4 @@
-package eAdapter;
+package parsers;
 
 import java.util.Scanner;
 
