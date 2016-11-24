@@ -50,7 +50,7 @@ public class Document {
     }
     
     public void addField(String fieldName, String value) {
-    	if (this.metadata.equals(null)) {
+    	if (this.metadata == null) {
     		this.metadata = new LinkedHashMap<String, String>();
     	}
     	

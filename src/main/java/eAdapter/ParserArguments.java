@@ -1,24 +1,31 @@
 package eAdapter;
 
-import java.io.BufferedReader;
+import java.util.Scanner;
 
 public class ParserArguments {
-	private final Delimiters delimiters;
-	private final BufferedReader reader;
-	private final String[] header;
-	
-	private ParserArguments(BufferedReader reader, Delimiters delimiters, String[] header) {
-		this.reader = reader;
-		this.delimiters = delimiters;
-		this.header = header;		
-	}
-	
-	public static ParserArguments of(BufferedReader reader, Delimiters delimiters, String[] header) {
-		return new ParserArguments(reader, delimiters, header);
-	}
-	
-	
-	public Delimiters getDelimiters() { return this.delimiters; }
-	public BufferedReader getReader() { return this.reader; }
-	public String[] getHeader() { return this.header; }
+    private final Delimiters delimiters;
+    private final Scanner scanner;
+    private final String[] header;
+
+    private ParserArguments(Scanner scanner, Delimiters delimiters, String[] header) {
+        this.scanner = scanner;
+        this.delimiters = delimiters;
+        this.header = header;
+    }
+
+    public static ParserArguments of(Scanner scanner, Delimiters delimiters, String[] header) {
+        return new ParserArguments(scanner, delimiters, header);
+    }
+
+    public Delimiters getDelimiters() {
+        return this.delimiters;
+    }
+
+    public Scanner getScanner() {
+        return this.scanner;
+    }
+
+    public String[] getHeader() {
+        return this.header;
+    }
 }
