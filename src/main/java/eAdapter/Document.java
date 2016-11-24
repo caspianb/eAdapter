@@ -1,5 +1,6 @@
 package eAdapter;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,14 @@ public class Document {
 
     public String getKey() {
         return key;
+    }
+    
+    public void addField(String fieldName, String value) {
+    	if (this.metadata.equals(null)) {
+    		this.metadata = new LinkedHashMap<String, String>();
+    	}
+    	
+    	this.metadata.put(fieldName, value);
     }
 
 }
