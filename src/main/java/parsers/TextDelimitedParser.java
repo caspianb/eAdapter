@@ -1,25 +1,137 @@
 package parsers;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Triple;
 
 import eAdapter.Document;
+import eAdapter.Representative;
 
-public class TextDelimitedParser implements Parser {
+public class TextDelimitedParser {
 
     private final char NULL_CHAR = '\0';
     private final char NEW_LINE = '\n';
     private final String LINE_RETURN = "\r\n";
 
-    @Override
-    public Document parseDocument(ParserArguments parserArgs) {
-        Scanner scanner = parserArgs.getScanner();
-        Delimiters delimiters = parserArgs.getDelimiters();
-        String[] header = parserArgs.getHeader();
-        String pattern = Character.toString(delimiters.getNewRecord());
-        scanner.useDelimiter(pattern);
+    public List<Document> parse(Path path, Delimiters delimiters, boolean hasHeader,
+            String keyColumnName, String parentColumnName, String childColumnName, char childColumnDelimiter,
+            List<Triple<String, String, Representative.Type>> representativeArgs) {
+        Map<String, Document> docs = new LinkedHashMap<>();
+        // parse the file
+        try (Scanner scanner = new Scanner(path)) {
+            String pattern = String.valueOf(delimiters.getNewRecord());
+            scanner.useDelimiter(pattern);
+            String headerLine = "";
+            List<String> header = null;
+            // get the header line
+            if (scanner.hasNext()) {
+                headerLine = scanner.next();
+            }
+            else {
+                throw new RuntimeException("The file has no data.");
+            }
+            // get the header
+            header = getHeader(headerLine, hasHeader, delimiters);
+            // if no header exists add the parsed line to docs
+            if (!hasHeader) {
+                Scanner firstLine = new Scanner(headerLine);
+                Document firstDoc = parse(firstLine, delimiters, header, keyColumnName, representativeArgs);
+                docs.put(header.get(0), firstDoc);
+            }
+            // parse the file
+            while (scanner.hasNext()) {
+                Document doc = parse(scanner, delimiters, header, keyColumnName, representativeArgs);
+                // get the parent
+                if (parentColumnName != null && !StringUtils.isBlank(parentColumnName)) {
+                    String parentKey = doc.getMetadata().get(parentColumnName);
+                    Document parentDoc = docs.get(parentKey);
+                    doc.setParent(parentDoc);
+                }
+                //else if (child)
+                // finish adding parents here
+                // add children here too
+                docs.put(doc.getKey(), doc);
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return new ArrayList<>(docs.values());
+    }
+
+    public Document parse(Scanner scanner, Delimiters delimiters, List<String> header, String keyColumnName,
+            List<Triple<String, String, Representative.Type>> repArgs) {
         Document document = new Document();
+        List<String> values = parseValues(scanner, delimiters);
+        // populate metadata
+        if (header.size() == values.size()) {
+            for (int i = 0; i < values.size(); i++) {
+                String fieldName = header.get(i);
+                String value = values.get(i);
+                document.addField(fieldName, value);
+            }
+        }
+        else {
+            throw new RuntimeException("The value size does not match the header size.");
+        }
+        // populate key
+        String keyValue = (keyColumnName != null && !StringUtils.isBlank(keyColumnName))
+                ? document.getMetadata().get(keyColumnName)
+                : document.getMetadata().get(header.get(0));
+        document.setKey(keyValue);
+        // populate representatives
+        if (repArgs != null) {
+            Set<Representative> reps = new LinkedHashSet<>();
+            for (Triple<String, String, Representative.Type> repArg : repArgs) {
+                Representative rep = new Representative();
+                String fileColumnName = repArg.getLeft();
+                Set<String> files = new LinkedHashSet<>();
+                String file = document.getMetadata().get(fileColumnName);
+                files.add(file);
+                rep.setType(repArg.getRight());
+                rep.setName(repArg.getMiddle());
+                rep.setFiles(files);
+            }
+            document.setRepresentatives(reps);
+        }
+
+        return document;
+    }
+
+    private List<String> getHeader(String headerLine, boolean hasHeader, Delimiters delimiters) {
+        Scanner firstLine = new Scanner(headerLine);
+        List<String> header = new ArrayList<String>();
+        List<String> values = parseValues(firstLine, delimiters);
+
+        if (hasHeader) {
+            header = values;
+        }
+        else {
+            for (int i = 0; i < values.size(); i++) {
+                header.add("Column " + i);
+            }
+        }
+
+        return header;
+    }
+
+    private List<String> parseValues(Scanner scanner, Delimiters delimiters) {
+        String pattern = Character.toString(delimiters.getNewRecord());
+        // check if the pattern is set correctly
+        if (!scanner.delimiter().equals(String.valueOf(delimiters.getNewRecord()))) {
+            scanner.useDelimiter(pattern);
+        }
+        List<String> parsedValues = new ArrayList<String>();
         String line = "";
         // get line
         if (scanner.hasNext()) {
@@ -27,18 +139,11 @@ public class TextDelimitedParser implements Parser {
         }
 
         if (delimiters.getTextQualifier() == NULL_CHAR) {
-            // no text qualifier specified, so split on the field separator	
+            // no text qualifier specified, so split on the field separator 
             String fieldSeparator = Character.toString(delimiters.getFieldSeparator());
-            String[] values = line.split(fieldSeparator);
-            // populate fields
-            for (int i = 0; i < values.length; i++) {
-                String fieldName = header[i];
-                String value = values[i];
-                document.addField(fieldName, value);
-            }
+            parsedValues = Arrays.asList(line.split(fieldSeparator));
         }
         else {
-            int colIndex = 0;
             // scan through the line looking for each field break based on text qualifiers and field separator
             for (int pos = 0; pos < line.length(); pos++) {
                 StringBuilder valueBuilder = new StringBuilder(line.length());
@@ -48,7 +153,7 @@ public class TextDelimitedParser implements Parser {
                 }
                 else if (line.charAt(pos) != delimiters.getTextQualifier()) {
                     //  parse unqualified data
-                    pos = parseUnqualifiedData(line, pos, valueBuilder, parserArgs);
+                    pos = parseUnqualifiedData(line, pos, valueBuilder, delimiters);
                 }
                 else {
                     // parse qualified data
@@ -62,13 +167,11 @@ public class TextDelimitedParser implements Parser {
                     value = value.replace(delimiters.getFlattenedNewLine(), NEW_LINE);
                 }
                 // insert data
-                String fieldName = header[colIndex];
-                document.addField(fieldName, value);
-                colIndex++;
+                parsedValues.add(value);
             }
         }
 
-        return document;
+        return parsedValues;
     }
 
     private int parseQualifiedData(String line, int pos, StringBuilder valueBuilder, Delimiters delimiters, Scanner scanner) {
@@ -114,8 +217,7 @@ public class TextDelimitedParser implements Parser {
         return pos;
     }
 
-    private int parseUnqualifiedData(String line, int pos, StringBuilder valueBuilder, ParserArguments parserArgs) {
-        Delimiters delimiters = parserArgs.getDelimiters();
+    private int parseUnqualifiedData(String line, int pos, StringBuilder valueBuilder, Delimiters delimiters) {
         // not a qualified field, so read all characters up to the field separator
         for (; pos < line.length(); pos++) {
             if (line.charAt(pos) == delimiters.getFieldSeparator()) {

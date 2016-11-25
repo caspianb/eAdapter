@@ -13,6 +13,14 @@ public class Document {
     private Map<String, String> metadata;
     private Set<Representative> representatives;
 
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
     public Document getParent() {
         return parent;
     }
@@ -43,10 +51,6 @@ public class Document {
 
     public void setRepresentatives(Set<Representative> representatives) {
         this.representatives = representatives;
-    }
-
-    public String getKey() {
-        return key;
     }
 
     public void addField(String fieldName, String value) {
