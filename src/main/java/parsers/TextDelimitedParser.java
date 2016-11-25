@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -13,7 +14,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
-
 import eAdapter.Document;
 import eAdapter.Representative;
 
@@ -24,15 +24,16 @@ public class TextDelimitedParser {
     private final String LINE_RETURN = "\r\n";
 
     public List<Document> parse(Path path, Delimiters delimiters, boolean hasHeader,
-            String keyColumnName, String parentColumnName, String childColumnName, char childColumnDelimiter,
+            String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,
             List<Triple<String, String, Representative.Type>> representativeArgs) {
         Map<String, Document> docs = new LinkedHashMap<>();
-        // parse the file
+        // create the scanner and the needed resources then parse the file
         try (Scanner scanner = new Scanner(path)) {
             String pattern = String.valueOf(delimiters.getNewRecord());
             scanner.useDelimiter(pattern);
             String headerLine = "";
             List<String> header = null;
+            Map<String, Document> paternity = new HashMap<>(); // childKey >> parentDoc
             // get the header line
             if (scanner.hasNext()) {
                 headerLine = scanner.next();
@@ -46,21 +47,24 @@ public class TextDelimitedParser {
             if (!hasHeader) {
                 Scanner firstLine = new Scanner(headerLine);
                 Document firstDoc = parse(firstLine, delimiters, header, keyColumnName, representativeArgs);
-                docs.put(header.get(0), firstDoc);
+                docs.put(header.get(0), firstDoc); // if no header the first col is expected to be the key
             }
+            // get the childSeparator or assign a default value
+            String childSeparator = (childColumnDelimiter != null && !StringUtils.isBlank(childColumnDelimiter))
+                    ? childColumnDelimiter
+                    : ";";
             // parse the file
             while (scanner.hasNext()) {
                 Document doc = parse(scanner, delimiters, header, keyColumnName, representativeArgs);
-                // get the parent
-                if (parentColumnName != null && !StringUtils.isBlank(parentColumnName)) {
-                    String parentKey = doc.getMetadata().get(parentColumnName);
-                    Document parentDoc = docs.get(parentKey);
-                    doc.setParent(parentDoc);
-                }
-                //else if (child)
-                // finish adding parents here
-                // add children here too
+                // set the parent and child values
+                settleFamilyDrama(parentColumnName, childColumnName, childSeparator, doc, docs, paternity);
+                // add the document to the collection
                 docs.put(doc.getKey(), doc);
+            }
+            // check for children that have disowned their parent
+            // this can only be known after all children have been imported
+            if (paternity.size() > 0) {
+                throw new RuntimeException("Broken families, children have disowned their parent.");
             }
         }
         catch (IOException e) {
@@ -84,7 +88,7 @@ public class TextDelimitedParser {
         else {
             throw new RuntimeException("The value size does not match the header size.");
         }
-        // populate key
+        // populate key, if there is no key column name the value in the first column is expected to be the key
         String keyValue = (keyColumnName != null && !StringUtils.isBlank(keyColumnName))
                 ? document.getMetadata().get(keyColumnName)
                 : document.getMetadata().get(header.get(0));
@@ -106,6 +110,84 @@ public class TextDelimitedParser {
         }
 
         return document;
+    }
+
+    private void settleFamilyDrama(String parentColumnName, String childColumnName, String childSeparator,
+            Document doc, Map<String, Document> docs, Map<String, Document> paternity) {
+        if (parentColumnName != null && !StringUtils.isBlank(parentColumnName)) {
+            // if we have a parent column name
+            String parentKey = doc.getMetadata().get(parentColumnName);
+            // check that the parentKey doesn't refer to itself
+            if (parentKey.equals(doc.getKey()) || StringUtils.isBlank(parentKey)) {
+                // the parentid value refers to itself or there is no parent
+                // do nothing here
+            }
+            else {
+                Document parent = docs.get(parentKey);
+                // check that a parent exists
+                if (parent != null) {
+                    setRelationships(doc, parent);
+                    // validate relationships if both parent & child fields exist
+                    if (childColumnName != null && !StringUtils.isBlank(childColumnName)) {
+                        // log paternity so we can check for children who disown their parent
+                        String childrenLine = doc.getMetadata().get(childColumnName);
+                        if (StringUtils.isBlank(childrenLine)) {
+                            String[] childKeys = childrenLine.split(childSeparator);
+                            // the child docs haven't been added yet so we'll record the relationship and add them later
+                            for (String childKey : childKeys) {
+                                paternity.put(childKey, doc); // paternity maps childKey >> parentDoc
+                            }
+                        }
+                        // check for reciprocal relationships
+                        if (parent.getMetadata().get(childColumnName).contains(parentKey)) {
+                            // the relationship is reciprocal
+                            // we'll check for orphans later
+                            paternity.remove(doc.getKey());
+                        }
+                        else {
+                            throw new RuntimeException("Broken families, the parent disowns a child document.");
+                        }
+                    }
+                }
+                else {
+                    throw new RuntimeException("Broken families, the parent is missing.");
+                }
+            }
+        }
+        else if (childColumnName != null && !StringUtils.isBlank(childColumnName)) {
+            // if we don't have a parent column name but we have a child column name
+            String childrenLine = doc.getMetadata().get(childColumnName);
+            if (StringUtils.isBlank(childrenLine)) {
+                // no children
+                // do nothing here
+            }
+            else {
+                String[] childKeys = childrenLine.split(childSeparator);
+                // the child docs haven't been added yet so we'll record the relationship and add them later
+                for (String childKey : childKeys) {
+                    paternity.put(childKey, doc); // paternity maps childKey >> parentDoc
+                }
+                // now check for the paternity of this document and add the parent
+                // paternity maps childKey >> parentDoc                    
+                if (paternity.containsKey(doc.getKey())) {
+                    Document parent = paternity.get(doc.getKey()); // note: the parent doc has already been confirmed
+                    setRelationships(doc, parent);
+                    paternity.remove(doc.getKey()); // needs to be removed for the disowned parent check
+                }
+            }
+        }
+        else {
+            // no family data
+            // do nothing here
+        }
+    }
+
+    private void setRelationships(Document doc, Document parent) {
+        doc.setParent(parent);
+        // now add this document as a child to the parent
+        List<Document> children = parent.getChildren();
+        children.add(doc);
+        parent.setChildren(children);
     }
 
     private List<String> getHeader(String headerLine, boolean hasHeader, Delimiters delimiters) {

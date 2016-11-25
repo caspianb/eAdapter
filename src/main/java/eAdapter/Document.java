@@ -1,6 +1,8 @@
 package eAdapter;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,9 +11,9 @@ public class Document {
 
     private String key;
     private Document parent;
-    private List<Document> children;
-    private Map<String, String> metadata;
-    private Set<Representative> representatives;
+    private List<Document> children = new ArrayList<>();
+    private Map<String, String> metadata = new LinkedHashMap<>();
+    private Set<Representative> representatives = new LinkedHashSet<>();
 
     public String getKey() {
         return key;
@@ -54,10 +56,6 @@ public class Document {
     }
 
     public void addField(String fieldName, String value) {
-        if (this.metadata == null) {
-            this.metadata = new LinkedHashMap<String, String>();
-        }
-
         this.metadata.put(fieldName, value);
     }
 
