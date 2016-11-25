@@ -75,4 +75,10 @@ public final class Delimiters {
         else if (this.escapeCharacter == this.newRecord)
             throw new RuntimeException("The escape character and the new record delimiter can not have the same value.");
     }
+
+    @Override
+    public String toString() {
+        return "Delimiters [fieldSeparator=" + fieldSeparator + ", textQualifier=" + textQualifier + ", newRecord=" + newRecord + ", escapeCharacter=" + escapeCharacter + ", flattenedNewLine=" + flattenedNewLine + "]";
+    }
+
 }
