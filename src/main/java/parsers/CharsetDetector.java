@@ -25,7 +25,7 @@ public class CharsetDetector {
 
         try (InputStream input = new FileInputStream(path.toFile())) {
             final byte[] bom = new byte[MAX_BOM_WIDTH];
-            if (input.read(bom) > MIN_BOM_WIDTH) {
+            if (input.read(bom) >= MIN_BOM_WIDTH) {
                 charset = charsetBoms.entrySet().stream()
                         .filter(pair -> matchesBom(bom, pair.getValue()))
                         .map(pair -> pair.getKey())
