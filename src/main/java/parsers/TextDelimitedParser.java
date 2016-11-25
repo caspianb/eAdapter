@@ -1,6 +1,7 @@
 package parsers;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +29,8 @@ public class TextDelimitedParser {
             List<Triple<String, String, Representative.Type>> representativeArgs) {
         Map<String, Document> docs = new LinkedHashMap<>();
         // create the scanner and the needed resources then parse the file
-        try (Scanner scanner = new Scanner(path)) {
+        Charset encoding = CharsetDetector.detect(path);
+        try (Scanner scanner = new Scanner(path, encoding.name())) {
             String pattern = String.valueOf(delimiters.getNewRecord());
             scanner.useDelimiter(pattern);
             String headerLine = "";
