@@ -14,6 +14,12 @@ import org.apache.commons.lang3.StringUtils;
 import eAdapter.Document;
 import eAdapter.Representative;
 
+/**
+ * 
+ * @author Jeff Gillispie
+ * @version December 2016
+ *
+ */
 public class TextDelimitedBuilder {
     public List<Document> build(List<String[]> lines, boolean hasHeader,
             String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,

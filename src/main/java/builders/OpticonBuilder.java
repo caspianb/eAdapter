@@ -17,6 +17,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import eAdapter.Document;
 import eAdapter.Representative;
 
+/**
+ * 
+ * @author Jeff Gillispie
+ * @version December 2016
+ * 
+ * Purpose: Builds a list of documents from a list of lines split on a comma 
+ *          that represent either a single document or a group of documents.
+ */
 public class OpticonBuilder {
     private final int IMAGE_KEY_INDEX = 0;
     private final int VOLUME_NAME_INDEX = 1;
@@ -32,22 +40,101 @@ public class OpticonBuilder {
     private final String BOX_BREAK_FIELD = "Box Break";
     private final String FOLDER_BREAK_FIELD = "Folder Break";
     private final String TEXT_EXT = ".txt";
-            
+    private final String DEFAULT_IMAGE_REP_NAME = "default";
+    private final String DEFAULT_TEXT_REP_NAME = "default";
+    
+    /**
+     * Levels that a text representative can be.
+     */
     public enum TextLevel {
+        /**
+         * No text representative exists.
+         */
         None,
+        /**
+         * The text representative has a text file that corresponds to each page in the document
+         * and it must be accompanied by a page level image.
+         */
         Page,
+        /**
+         * The text representative has a single text file that contains the text for all pages 
+         * of the document. The text file base name matches the image file base name of the 
+         * first page of the document.
+         */
         Doc
     }
     
+    /**
+     * Locations where a text representative can be.
+     */
     public enum TextLocation {
+        /**
+         * No text representative exists.
+         */
         None,
+        /**
+         * The text files reside in the same location as the image files.
+         */
         SameAsImages,
+        /**
+         * The text files reside in an alternate location.
+         * A find/replace operation will transform the image path into the text path.
+         */
         AlternateLocation,
     }
     
-
+    /**
+     * Builds a list of documents from an opticon file with no text representatives and uses the default image representative name
+     * @param lines the lines read from an opt file split on a comma
+     * @return returns a list of documents
+     */
+    public List<Document> buildDocuments(List<String[]> lines) {
+        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+    }
+    
+    /**
+     * Builds a list of documents from an opticon file with no text representatives.
+     * @param lines the lines read from an opt file split on a comma
+     * @param imagesName the name of the image representative
+     * @return returns a list of documents
+     */
+    public List<Document> buildDocuments(List<String[]> lines, String imagesName) {
+        return buildDocuments(lines, imagesName, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+    }
+    
+    /**
+     * Builds a list of documents from an opticon file using the default image and text representative names
+     * @param lines the lines read from an opt file split on a comma
+     * @param textLevel the level of the text representative
+     * @param textLocation the location of the text representative
+     * @param textPathFindReplace a pair containing a pattern to find all image path specific 
+     *        elements in the image path and the string to replace them with. The result of this 
+     *        operation should be the transformation of the image path into the text path.
+     *        The file extension of the image file name will automatically be updated to '.txt'.
+     *        The base name of the image file and text file are expected to be identical.
+     * @return returns a list of documents
+     */
+    public List<Document> buildDocuments(List<String[]> lines, 
+            TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFindReplace) {
+        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textLevel, textLocation, textPathFindReplace);        
+    } 
+    
+    /**
+     * Builds a list of documents from an opticon file
+     * @param lines the lines read from an opt file split on a comma
+     * @param imagesName the name of images representative
+     * @param textName the name of the text representative
+     * @param textLevel the level of the text representative        
+     * @param textLocation the location of the text representative        
+     * @param textPathFindReplace a pair containing a pattern to find all image path specific 
+     *        elements in the image path and the string to replace them with. The result of this 
+     *        operation should be the transformation of the image path into the text path.
+     *        The file extension of the image file name will automatically be updated to '.txt'.
+     *        The base name of the image file and text file are expected to be identical.
+     * @return returns a list of documents
+     */
     public List<Document> buildDocuments(List<String[]> lines, String imagesName, 
-            String textName, TextLevel textLevel, TextLocation textLocation, Pair<String, String> textPathFindReplace) {
+            String textName, TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFindReplace) {
         // setup for building
         Map<String, Document> docs = new LinkedHashMap<>();
         List<String[]> docPages = new ArrayList<>();
@@ -76,7 +163,56 @@ public class OpticonBuilder {
 
         return new ArrayList<>(docs.values());
     }
-
+    
+    /**
+     * Builds a single document using the default image representative name, which has no text representatie
+     * @param docPages a list of opticon page records split on a comma
+     * @return returns a single document
+     */
+    public Document buildDocument(List<String[]> docPages) {
+        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+    }
+    
+    /**
+     * Builds a single document, which has no text representative
+     * @param docPages a list of opticon page records split on a comma
+     * @param imagesName the name of the image representative
+     * @return returns a single document
+     */
+    public Document buildDocument(List<String[]> docPages, String imagesName) {
+        return buildDocument(docPages, imagesName, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+    }
+    
+    /**
+     * Builds a single document using the default image and text represntative names
+     * @param docPages a list of opticon page records split on a comma
+     * @param textLevel the level of the text representative
+     * @param textLocation the location of the text representative
+     * @param textPathFileReplace a pair containing a pattern to find all image path specific 
+     *        elements in the image path and the string to replace them with. The result of this 
+     *        operation should be the transformation of the image path into the text path.
+     *        The file extension of the image file name will automatically be updated to '.txt'.
+     *        The base name of the image file and text file are expected to be identical.
+     * @return returns a single document
+     */
+    public Document buildDocument(List<String[]> docPages, TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFileReplace) {
+        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textLevel, textLocation, textPathFileReplace);
+    }
+    
+    /**
+     * Builds a single document
+     * @param docPages a list of opticon page records split on a comma
+     * @param imagesName the name of the images representative
+     * @param textName the name of the text representative
+     * @param textLevel the level of the text representative
+     * @param textLocation the location of the text representative
+     * @param textPathFindReplace a pair containing a pattern to find all image path specific 
+     *        elements in the image path and the string to replace them with. The result of this 
+     *        operation should be the transformation of the image path into the text path.
+     *        The file extension of the image file name will automatically be updated to '.txt'.
+     *        The base name of the image file and text file are expected to be identical.
+     * @return returns a single document
+     */
     public Document buildDocument(List<String[]> docPages, String imagesName,
             String textName, TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFindReplace) {
         // setup for building
