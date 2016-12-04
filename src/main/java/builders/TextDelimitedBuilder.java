@@ -50,7 +50,7 @@ public class TextDelimitedBuilder {
                 continue; // skip header line
             }
             // build a document
-            Document doc = build(line, header, keyColumnName, repSettings);
+            Document doc = buildDocument(line, header, keyColumnName, repSettings);
             // set the parent and child values
             settleFamilyDrama(parentColumnName, childColumnName, childSeparator, doc, docs, paternity);
             // add the document to the collection
