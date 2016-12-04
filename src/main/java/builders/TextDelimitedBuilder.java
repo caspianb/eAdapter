@@ -46,19 +46,16 @@ public class TextDelimitedBuilder {
     public Document build(String[] line, String[] header, String keyColumnName, List<RepresentativeSetting> representativeSettings) {
         // setup for building
         Document document = new Document();
-        List<String> values = Arrays.asList(line);
         // check value size matches the header size
-        if (header.length == values.size()) {
+        if (header.length == line.length) {
             throw new RuntimeException("The value size does not match the header size.");
-        }
-        else {
-            // populate metadata
-            for (int i = 0; i < values.size(); i++) {
-                String fieldName = header[i];
-                String value = values.get(i);
-                document.addField(fieldName, value);
-            }
-        }
+        }        
+        // populate metadata
+        for (int i = 0; i < line.length; i++) {
+            String fieldName = header[i];
+            String value = line[i];
+            document.addField(fieldName, value);
+        }        
         // populate key, if there is no key column name the value in the first column is expected to be the key
         String keyValue = (!StringUtils.isBlank(keyColumnName))
                 ? document.getMetadata().get(keyColumnName)
@@ -89,7 +86,7 @@ public class TextDelimitedBuilder {
 
     private void settleFamilyDrama(String parentColumnName, String childColumnName, String childSeparator,
             Document doc, Map<String, Document> docs, Map<String, Document> paternity) {
-        if (parentColumnName != null && !StringUtils.isBlank(parentColumnName)) {
+        if (StringUtils.isNotBlank(parentColumnName)) {
             // if we have a parent column name
             String parentKey = doc.getMetadata().get(parentColumnName);
             // check that the parentKey doesn't refer to itself
@@ -107,10 +104,10 @@ public class TextDelimitedBuilder {
                     // a parent exists
                     setRelationships(doc, parent);
                     // validate relationships if both parent & child fields exists
-                    if (!StringUtils.isBlank(childColumnName)) {
+                    if (StringUtils.isNotBlank(childColumnName)) {
                         // log paternity so we can check for children who disown their parent
                         String childrenLine = doc.getMetadata().get(childColumnName);
-                        if (StringUtils.isBlank(childrenLine)) {
+                        if (StringUtils.isNotBlank(childrenLine)) {
                             String[] childKeys = childrenLine.split(childSeparator);
                             // the child docs haven't been added yet so we'll record the relationships and add them later
                             for (String childKey : childKeys) {
@@ -130,7 +127,7 @@ public class TextDelimitedBuilder {
                 }
             }
         }
-        else if (!StringUtils.isBlank(childColumnName)) {
+        else if (StringUtils.isNotBlank(childColumnName)) {
             // if we don't have a parent column name but we have a child column name
             String childrenLine = doc.getMetadata().get(childColumnName);
             if (StringUtils.isBlank(childrenLine)) {
