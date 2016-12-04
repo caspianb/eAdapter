@@ -19,12 +19,10 @@ public class TextDelimitedBuilder {
             String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,
             List<RepresentativeSetting> repSettings) {
         // setup for building
-        List<String> header = getHeader(lines.get(0), hasHeader);
+        String[] header = getHeader(lines.get(0), hasHeader);
         Map<String, Document> docs = new LinkedHashMap<>();
-        Map<String, Document> paternity = new HashMap<>(); // childKey >> parentDoc
-        String childSeparator = (childColumnDelimiter != null && !StringUtils.isBlank(childColumnDelimiter))
-                ? childColumnDelimiter
-                : ";";
+        Map<String, Document> paternity = new HashMap<>(); // childKey >> parentDoc        
+        String childSeparator = StringUtils.defaultIfBlank(childColumnDelimiter, ";");
         // build the documents
         for (String[] line : lines) {
             if (hasHeader) {
@@ -45,25 +43,26 @@ public class TextDelimitedBuilder {
         return new ArrayList<>(docs.values());
     }
 
-    public Document build(String[] line, List<String> header, String keyColumnName, List<RepresentativeSetting> representativeSettings) {
+    public Document build(String[] line, String[] header, String keyColumnName, List<RepresentativeSetting> representativeSettings) {
         // setup for building
         Document document = new Document();
         List<String> values = Arrays.asList(line);
-        // populate metadata
-        if (header.size() == values.size()) {
+        // check value size matches the header size
+        if (header.length == values.size()) {
+            throw new RuntimeException("The value size does not match the header size.");
+        }
+        else {
+            // populate metadata
             for (int i = 0; i < values.size(); i++) {
-                String fieldName = header.get(i);
+                String fieldName = header[i];
                 String value = values.get(i);
                 document.addField(fieldName, value);
             }
         }
-        else {
-            throw new RuntimeException("The value size does not match the header size.");
-        }
         // populate key, if there is no key column name the value in the first column is expected to be the key
-        String keyValue = (keyColumnName != null && !StringUtils.isBlank(keyColumnName))
+        String keyValue = (!StringUtils.isBlank(keyColumnName))
                 ? document.getMetadata().get(keyColumnName)
-                : document.getMetadata().get(header.get(0));
+                : document.getMetadata().get(header[0]);
         document.setKey(keyValue);
         // populate representatives
         if (representativeSettings != null) {
@@ -100,11 +99,15 @@ public class TextDelimitedBuilder {
             }
             else {
                 Document parent = docs.get(parentKey);
-                // check that a parent exists
-                if (parent != null) {
+                // check if there is no parent
+                if (parent == null) {
+                    throw new RuntimeException("Broken families, the parent is missing.");
+                }
+                else {
+                    // a parent exists
                     setRelationships(doc, parent);
                     // validate relationships if both parent & child fields exists
-                    if (childColumnName != null && !StringUtils.isBlank(childColumnName)) {
+                    if (!StringUtils.isBlank(childColumnName)) {
                         // log paternity so we can check for children who disown their parent
                         String childrenLine = doc.getMetadata().get(childColumnName);
                         if (StringUtils.isBlank(childrenLine)) {
@@ -114,23 +117,20 @@ public class TextDelimitedBuilder {
                                 paternity.put(childKey, doc); // paternity maps childKey >> parentDoc
                             }
                         }
-                        // check for reciprocal relationships
-                        if (parent.getMetadata().get(childColumnName).contains(parentKey)) {
+                        // check for relationships that are not reciprocal
+                        if (!parent.getMetadata().get(childColumnName).contains(parentKey)) {
+                            throw new RuntimeException("Broken families, the parent disowns a child document.");                            
+                        }
+                        else {
                             // the relationship is reciprocal
                             // we'll check for orphans later
                             paternity.remove(doc.getKey());
                         }
-                        else {
-                            throw new RuntimeException("Broken families, the parent disowns a child document.");
-                        }
-                    }
-                }
-                else {
-                    throw new RuntimeException("Broken families, the parent is missing.");
+                    }                    
                 }
             }
         }
-        else if (childColumnName != null && !StringUtils.isBlank(childColumnName)) {
+        else if (!StringUtils.isBlank(childColumnName)) {
             // if we don't have a parent column name but we have a child column name
             String childrenLine = doc.getMetadata().get(childColumnName);
             if (StringUtils.isBlank(childrenLine)) {
@@ -166,16 +166,16 @@ public class TextDelimitedBuilder {
         parent.setChildren(children);
     }
 
-    public List<String> getHeader(String[] headerValues, boolean hasHeader) {
-        List<String> header = new ArrayList<>();
+    public String[] getHeader(String[] headerValues, boolean hasHeader) {
+        String[] header = new String[headerValues.length];
         // check if the supplied values are the header
         if (hasHeader) {
-            header = Arrays.asList(headerValues);
+            header = headerValues;
         }
         else {
             // create arbitrary column names
-            for (int i = 0; i < headerValues.length; i++) {
-                header.add("Column " + i);
+            for (int i = 0; i < headerValues.length; i++) {                
+                header[i] = "Column " + i;
             }
         }
         return header;
