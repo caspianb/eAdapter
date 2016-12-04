@@ -36,7 +36,7 @@ public class TextDelimitedBuilder {
      * @param repSettings representative settings
      * @return returns a list of documents
      */
-    public List<Document> build(List<String[]> lines, boolean hasHeader,
+    public List<Document> buildDocuments(List<String[]> lines, boolean hasHeader,
             String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,
             List<RepresentativeSetting> repSettings) {
         // setup for building
@@ -72,7 +72,7 @@ public class TextDelimitedBuilder {
      * @param representativeSettings representative settings
      * @return returns a document
      */
-    public Document build(String[] line, String[] header, String keyColumnName, List<RepresentativeSetting> representativeSettings) {
+    public Document buildDocument(String[] line, String[] header, String keyColumnName, List<RepresentativeSetting> representativeSettings) {
         // setup for building
         Document document = new Document();
         // check value size matches the header size
