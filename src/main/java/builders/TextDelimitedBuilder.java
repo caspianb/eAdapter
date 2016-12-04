@@ -19,8 +19,23 @@ import eAdapter.Representative;
  * @author Jeff Gillispie
  * @version December 2016
  *
+ * Purpose: Builds documents from a text delimited file.
  */
 public class TextDelimitedBuilder {
+    /**
+     * Builds a list of documents
+     * @param lines the lines parsed from a text delimited file
+     * @param hasHeader indicates if the first line is a header
+     *        if there is no header the arbitrary column names will be assigned
+     *        in the format "Column 1, Column 2, ..."
+     * @param keyColumnName the name of the column that contains the key
+     *        if no header exists the key must be in the first column
+     * @param parentColumnName the name of the column that contains the parent key or blank if none
+     * @param childColumnName the name of the column that contains the child key or blank if none
+     * @param childColumnDelimiter the delimiter used to split child key values
+     * @param repSettings representative settings
+     * @return returns a list of documents
+     */
     public List<Document> build(List<String[]> lines, boolean hasHeader,
             String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,
             List<RepresentativeSetting> repSettings) {
@@ -49,6 +64,14 @@ public class TextDelimitedBuilder {
         return new ArrayList<>(docs.values());
     }
 
+    /**
+     * Builds a document
+     * @param line a text delimited line representing a document
+     * @param header the header which contains the ordered field names
+     * @param keyColumnName the name of the key column
+     * @param representativeSettings representative settings
+     * @return returns a document
+     */
     public Document build(String[] line, String[] header, String keyColumnName, List<RepresentativeSetting> representativeSettings) {
         // setup for building
         Document document = new Document();
@@ -169,6 +192,14 @@ public class TextDelimitedBuilder {
         parent.setChildren(children);
     }
 
+    /**
+     * Gets the header values.
+     * @param headerValues the ordered column names or a line from the text delimited file
+     * @param hasHeader indicates if the headerValues are the header
+     *        if they are not the header the column names will be given an arbitrary name
+     *        in the following format "Column 1, Column 2, Column 3, ..."
+     * @return returns the ordered column names
+     */
     public String[] getHeader(String[] headerValues, boolean hasHeader) {
         String[] header = new String[headerValues.length];
         // check if the supplied values are the header
