@@ -184,7 +184,7 @@ public class OpticonBuilder {
     }
     
     /**
-     * Builds a single document using the default image and text represntative names
+     * Builds a single document using the default image and text representative names
      * @param docPages a list of opticon page records split on a comma
      * @param textLevel the level of the text representative
      * @param textLocation the location of the text representative
@@ -225,6 +225,7 @@ public class OpticonBuilder {
         String dir = pageOne[FOLDER_BREAK_INDEX];
         int pages = docPages.size(); // do we need to check the field value here?
         // set document properties
+        doc.setKey(key);
         doc.addField(IMAGE_KEY_FIELD, key);
         doc.addField(VOLUME_NAME_FIELD, vol);
         doc.addField(PAGE_COUNT_FIELD, Integer.toString(pages));
