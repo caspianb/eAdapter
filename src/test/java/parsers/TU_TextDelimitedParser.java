@@ -30,7 +30,6 @@ public class TU_TextDelimitedParser {
         String[] header = new String[] { "1", "2", "3", "4", "5" };
         List<String> fields = Arrays.asList(header);
         List<Triple<String, String, Representative.Type>> reps = null;
-        ParserArguments args = ParserArguments.of(scanner, delimiters, header);
         Document doc = parser.parse(scanner, delimiters, fields, "1", reps);
         Assert.assertEquals("one", doc.getMetadata().get("1"));
         Assert.assertEquals("two", doc.getMetadata().get("2"));
