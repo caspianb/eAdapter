@@ -239,7 +239,6 @@ public class OpticonBuilder {
         imageRep.setType(Representative.Type.IMAGE);
         imageRep.setFiles(representativeFiles);
         // get text representative        
-        //List<String> textFiles = new ArrayList<>();
         Set<String> textFiles = new LinkedHashSet<>();
         // add textFiles
         switch (textLevel) {
