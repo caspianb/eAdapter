@@ -39,49 +39,9 @@ public class OpticonBuilder {
     private final String PAGE_COUNT_FIELD = "Page Count";
     private final String BOX_BREAK_FIELD = "Box Break";
     private final String FOLDER_BREAK_FIELD = "Folder Break";
-    private final String TEXT_EXT = ".txt";
     private final String DEFAULT_IMAGE_REP_NAME = "default";
     private final String DEFAULT_TEXT_REP_NAME = "default";
-    
-    /**
-     * Levels that a text representative can be.
-     */
-    public enum TextLevel {
-        /**
-         * No text representative exists.
-         */
-        None,
-        /**
-         * The text representative has a text file that corresponds to each page in the document
-         * and it must be accompanied by a page level image.
-         */
-        Page,
-        /**
-         * The text representative has a single text file that contains the text for all pages 
-         * of the document. The text file base name matches the image file base name of the 
-         * first page of the document.
-         */
-        Doc
-    }
-    
-    /**
-     * Locations where a text representative can be.
-     */
-    public enum TextLocation {
-        /**
-         * No text representative exists.
-         */
-        None,
-        /**
-         * The text files reside in the same location as the image files.
-         */
-        SameAsImages,
-        /**
-         * The text files reside in an alternate location.
-         * A find/replace operation will transform the image path into the text path.
-         */
-        AlternateLocation,
-    }
+        
     
     /**
      * Builds a list of documents from an opticon file with no text representatives and uses the default image representative name
@@ -89,7 +49,10 @@ public class OpticonBuilder {
      * @return returns a list of documents
      */
     public List<Document> buildDocuments(List<String[]> lines) {
-        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
+        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
     /**
@@ -99,24 +62,20 @@ public class OpticonBuilder {
      * @return returns a list of documents
      */
     public List<Document> buildDocuments(List<String[]> lines, String imagesName) {
-        return buildDocuments(lines, imagesName, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
+        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        return buildDocuments(lines, imagesName, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
     /**
      * Builds a list of documents from an opticon file using the default image and text representative names
      * @param lines the lines read from an opt file split on a comma
-     * @param textLevel the level of the text representative
-     * @param textLocation the location of the text representative
-     * @param textPathFindReplace a pair containing a pattern to find all image path specific 
-     *        elements in the image path and the string to replace them with. The result of this 
-     *        operation should be the transformation of the image path into the text path.
-     *        The file extension of the image file name will automatically be updated to '.txt'.
-     *        The base name of the image file and text file are expected to be identical.
+     * @param textSetting the setting used to construct the text representative
      * @return returns a list of documents
      */
-    public List<Document> buildDocuments(List<String[]> lines, 
-            TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFindReplace) {
-        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textLevel, textLocation, textPathFindReplace);        
+    public List<Document> buildDocuments(List<String[]> lines, TextRepresentativeSetting textSetting) {        
+        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);        
     } 
     
     /**
@@ -124,17 +83,10 @@ public class OpticonBuilder {
      * @param lines the lines read from an opt file split on a comma
      * @param imagesName the name of images representative
      * @param textName the name of the text representative
-     * @param textLevel the level of the text representative        
-     * @param textLocation the location of the text representative        
-     * @param textPathFindReplace a pair containing a pattern to find all image path specific 
-     *        elements in the image path and the string to replace them with. The result of this 
-     *        operation should be the transformation of the image path into the text path.
-     *        The file extension of the image file name will automatically be updated to '.txt'.
-     *        The base name of the image file and text file are expected to be identical.
+     * @param textSetting the setting used to construct the text representative
      * @return returns a list of documents
      */
-    public List<Document> buildDocuments(List<String[]> lines, String imagesName, 
-            String textName, TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFindReplace) {
+    public List<Document> buildDocuments(List<String[]> lines, String imagesName, String textName, TextRepresentativeSetting textSetting) {
         // setup for building
         Map<String, Document> docs = new LinkedHashMap<>();
         List<String[]> docPages = new ArrayList<>();
@@ -143,7 +95,7 @@ public class OpticonBuilder {
             if (line[DOC_BREAK_INDEX].toUpperCase().equals(TRUE_VALUE)) {
                 // send data to make a document
                 if (docPages.size() > 0) {
-                    Document doc = buildDocument(docPages, imagesName, textName, textLevel, textLocation, textPathFindReplace);
+                    Document doc = buildDocument(docPages, imagesName, textName, textSetting);
                     String key = doc.getMetadata().get(IMAGE_KEY_FIELD);
                     docs.put(key, doc);
                 }
@@ -157,7 +109,7 @@ public class OpticonBuilder {
             }
         }
         // add last doc to the collection
-        Document doc = buildDocument(docPages, imagesName, textName, textLevel, textLocation, textPathFindReplace);
+        Document doc = buildDocument(docPages, imagesName, textName, textSetting);
         String key = doc.getMetadata().get(IMAGE_KEY_FIELD);
         docs.put(key, doc);
 
@@ -170,7 +122,10 @@ public class OpticonBuilder {
      * @return returns a single document
      */
     public Document buildDocument(List<String[]> docPages) {
-        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
+        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
     /**
@@ -180,23 +135,20 @@ public class OpticonBuilder {
      * @return returns a single document
      */
     public Document buildDocument(List<String[]> docPages, String imagesName) {
-        return buildDocument(docPages, imagesName, DEFAULT_TEXT_REP_NAME, TextLevel.None, TextLocation.None, null);
+        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
+        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        return buildDocument(docPages, imagesName, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
     /**
      * Builds a single document using the default image and text representative names
      * @param docPages a list of opticon page records split on a comma
-     * @param textLevel the level of the text representative
-     * @param textLocation the location of the text representative
-     * @param textPathFileReplace a pair containing a pattern to find all image path specific 
-     *        elements in the image path and the string to replace them with. The result of this 
-     *        operation should be the transformation of the image path into the text path.
-     *        The file extension of the image file name will automatically be updated to '.txt'.
-     *        The base name of the image file and text file are expected to be identical.
+     * @param textSetting the setting used to construct the text representative
      * @return returns a single document
      */
-    public Document buildDocument(List<String[]> docPages, TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFileReplace) {
-        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textLevel, textLocation, textPathFileReplace);
+    public Document buildDocument(List<String[]> docPages, TextRepresentativeSetting textSetting) {
+        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
     /**
@@ -204,19 +156,13 @@ public class OpticonBuilder {
      * @param docPages a list of opticon page records split on a comma
      * @param imagesName the name of the images representative
      * @param textName the name of the text representative
-     * @param textLevel the level of the text representative
-     * @param textLocation the location of the text representative
-     * @param textPathFindReplace a pair containing a pattern to find all image path specific 
-     *        elements in the image path and the string to replace them with. The result of this 
-     *        operation should be the transformation of the image path into the text path.
-     *        The file extension of the image file name will automatically be updated to '.txt'.
-     *        The base name of the image file and text file are expected to be identical.
+     * @param textSetting the setting used to construct the text representative
      * @return returns a single document
      */
-    public Document buildDocument(List<String[]> docPages, String imagesName,
-            String textName, TextLevel textLevel, TextLocation textLocation, Pair<Pattern, String> textPathFindReplace) {
+    public Document buildDocument(List<String[]> docPages, String imagesName, String textName, TextRepresentativeSetting textSetting) {
         // setup for building
         Document doc = new Document();
+        TextRepresentativeSetting.TextLevel textLevel = textSetting.getTextLevel();        
         // get document properties
         String[] pageOne = docPages.get(0);
         String key = pageOne[IMAGE_KEY_INDEX];
@@ -247,13 +193,13 @@ public class OpticonBuilder {
                 break;
             case Page:
                 docPages.forEach(page -> {
-                    String textFile = getTextFileFromPageInfo(page, textLocation, textPathFindReplace);
+                    String textFile = textSetting.getTextPathFromImagePath(page[FULL_PATH_INDEX]);
                     textFiles.add(textFile);
                 });
                 break;
             case Doc:
                 String[] firstPageInfo = docPages.get(0);
-                String textFile = getTextFileFromPageInfo(firstPageInfo, textLocation, textPathFindReplace);
+                String textFile = textSetting.getTextPathFromImagePath(firstPageInfo[FULL_PATH_INDEX]);
                 textFiles.add(textFile);
                 break;
             default:
@@ -274,29 +220,5 @@ public class OpticonBuilder {
         doc.setRepresentatives(reps);
         // return built doc
         return doc;
-    }
-    
-    private String getTextFileFromPageInfo(String[] pageInfo, TextLocation textLocation, Pair<Pattern, String> textPathFindReplace) {
-        String imagePath = pageInfo[FULL_PATH_INDEX];
-        String textFolder = FilenameUtils.getFullPath(imagePath);
-        String textFile = FilenameUtils.getBaseName(imagePath) + TEXT_EXT;
-        
-        
-        switch(textLocation) {            
-            case SameAsImages:
-                // nothing to replace
-                // do nothing here
-                break;
-            case AlternateLocation:
-                Matcher m = textPathFindReplace.getLeft().matcher(textFolder);
-                textFolder = m.replaceAll(textPathFindReplace.getRight());
-                break;
-            default:
-                // do nothing here
-                break;
-        }
-        
-        return Paths.get(textFolder, textFile).toString(); 
-    }
-
+    }    
 }
