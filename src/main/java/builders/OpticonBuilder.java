@@ -15,8 +15,7 @@ import eAdapter.Representative;
  * @author Jeff Gillispie
  * @version December 2016
  * 
- * Purpose: Builds a list of documents from a list of lines split on a comma 
- *          that represent either a single document or a group of documents.
+ * Purpose: Builds documents from opticon image records 
  */
 public class OpticonBuilder {
     private final int IMAGE_KEY_INDEX = 0;
@@ -25,6 +24,7 @@ public class OpticonBuilder {
     private final int DOC_BREAK_INDEX = 3;
     private final int BOX_BREAK_INDEX = 4;
     private final int FOLDER_BREAK_INDEX = 5;
+    @SuppressWarnings("unused")
     private final int PAGE_COUNT_INDEX = 6;
     private final String TRUE_VALUE = "Y";
     private final String IMAGE_KEY_FIELD = "DocID";

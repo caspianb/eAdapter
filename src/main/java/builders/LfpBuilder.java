@@ -12,58 +12,108 @@ import org.apache.commons.lang3.StringUtils;
 import eAdapter.Document;
 import eAdapter.Representative;
 
+/**
+ * 
+ * @author Jeff Gillispie
+ * @version December 2016
+ * 
+ * Purpose: Builds documents from lfp records
+ */
 public class LfpBuilder {
     private final String PAGE_REGEX_SPLITTER = ",|;";
     private final int TOKEN_INDEX = 0;
     private final int KEY_INDEX = 1;
     private final int IMAGE_BOUNDARY_FLAG_INDEX = 2;
+    @SuppressWarnings("unused")
     private final int IMAGE_OFFSET_INDEX = 3;
     private final int IMAGE_VOLUME_NAME_INDEX = 4;
     private final int IMAGE_FILE_PATH_INDEX = 5;
     private final int IMAGE_FILE_NAME_INDEX = 6;
+    @SuppressWarnings("unused")
+    /**
+     * TIF = 2
+     * JPG = 4
+     * PDF = 7
+     */
     private final int IMAGE_TYPE_INDEX = 7;
+    @SuppressWarnings("unused")
     private final int IMAGE_ROTATION_INDEX = 8;
     private final int NATIVE_VOLUME_NAME_INDEX = 2;
     private final int NATIVE_FILE_PATH_INDEX = 3;
     private final int NATIVE_FILE_NAME_INDEX = 4;
+    @SuppressWarnings("unused")
     private final int NATIVE_OFFSET_INDEX = 5;
     private final String KEY_FIELD = "DocID";
     private final String VOLUME_NAME_FIELD = "Volume Name";
     private final String PAGE_COUNT_FIELD = "Page Count";
     private final String EMPTY_STRING = "";
     private final String VOLUME_TRIM_REGEX = "^@";
+    private final String DEFAULT_IMAGE_REP_NAME = "default";
+    private final String DEFAULT_TEXT_REP_NAME = "default";
+    private final String DEFAULT_NATIVE_REP_NAME = "default";
     
+    /**
+     * LFP record type
+     */
     private enum Token {
+        /**
+         * LFP image record
+         */
         IM,
+        /**
+         * LFP native record
+         */
         OF
     }
     
-    private enum ImageType {
-        TIF(2),
-        JPG(4),
-        PDF(7);
-        
-        private int value;
-        
-        ImageType(int value) {
-            this.value = value;
-        }
-        
-        public int getValue() {
-            return this.value;
-        }
-    }
-    
+    /**
+     * Document boundary type
+     */
     private enum BoundaryFlag {
+        /**
+         * Parent or stand alone document
+         */
         D,
+        /**
+         * Child document which is preceded by it's parent
+         */
         C
     }
     
+    /**
+     * Builds a list of documents from a LFP file
+     * @param lines a list of lines from a LFP file
+     * @return returns a list of documents
+     */
+    public List<Document> buildDocuments(List<String> lines) {
+        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_NATIVE_REP_NAME, DEFAULT_TEXT_REP_NAME, null);
+    }
+    
+    /**
+     * Builds a list of documents from a LFP file
+     * @param lines a list of lines from a LFP file
+     * @param textSetting the text representative settings
+     * @return returns a list of documents
+     */
+    public List<Document> buildDocuments(List<String> lines, TextRepresentativeSetting textSetting) {
+        return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_NATIVE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
+    }
+    
+    /**
+     * Builds a list of documents from a LFP file
+     * @param lines a list of lines from a LFP file
+     * @param imagesName the name of the image representative
+     * @param nativeName the name of the native representative
+     * @param textName the name of the text representative
+     * @param textSetting the text representative settings
+     * @return returns a list documents
+     */
     public List<Document> buildDocuments(List<String> lines, String imagesName, String nativeName, String textName, TextRepresentativeSetting textSetting) {
         // setup for building
         Map<String, Document> docs = new LinkedHashMap<>(); // maps key to document
         List<String[]> docPages = new ArrayList<>(); // all page records for a single document
-        String[] nativeLine = null; 
+        String[] nativeLine = null; // native record
+        Document lastParent = null;
         // build the documents
         for(String line : lines) {
             String[] lineSegments = line.split(PAGE_REGEX_SPLITTER);
@@ -78,6 +128,16 @@ public class LfpBuilder {
                         if (docPages.size() > 0) {
                             Document doc = buildDocument(docPages, imagesName, nativeName, nativeLine, textName, textSetting);
                             String key = doc.getMetadata().get(KEY_FIELD);
+                            BoundaryFlag docBreak = BoundaryFlag.valueOf(lineSegments[IMAGE_BOUNDARY_FLAG_INDEX]);
+                            // check if document is a child
+                            if (docBreak.equals(BoundaryFlag.C)) {
+                                setRelationships(doc, lastParent);
+                            }
+                            else {
+                                // document is a parent
+                                lastParent = doc;
+                            }
+                                
                             docs.put(key, doc);
                         }
                         // clear docPages and add new first page
@@ -117,11 +177,88 @@ public class LfpBuilder {
         // add last doc to the collection
         Document doc = buildDocument(docPages, imagesName, nativeName, nativeLine, textName, textSetting);
         String key = doc.getMetadata().get(KEY_FIELD);
+        // check if a relationship needs to be set
+        if (docPages.get(0)[TOKEN_INDEX].equals(Token.IM.toString()) && docPages.get(0)[IMAGE_BOUNDARY_FLAG_INDEX].equals(BoundaryFlag.C.toString())) {
+            setRelationships(doc, lastParent);
+        }
         docs.put(key, doc);        
         // return documents
         return new ArrayList<>(docs.values());
     }
     
+    /**
+     * Build a single document using the default representative name and with an image representative only
+     * @param docPages a list of LFP page records split on a comma or a semicolon
+     * @return returns a document
+     */
+    public Document buildDocument(List<String[]> docPages) {
+        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_NATIVE_REP_NAME, null, DEFAULT_TEXT_REP_NAME, null);
+    }
+    
+    /**
+     * Build a single document with an image representative only
+     * @param docPages a list of LFP page records split on a comma or a semicolon
+     * @param imagesName the name of the image representative
+     * @return returns a document
+     */
+    public Document buildDocument(List<String[]> docPages, String imagesName) {
+        return buildDocument(docPages, imagesName, DEFAULT_NATIVE_REP_NAME, null, DEFAULT_TEXT_REP_NAME, null);
+    }
+    
+    /**
+     * Build a single document using the default representative names and with no native representative
+     * @param docPages a list of LFP page records split on a comma or a semicolon
+     * @param textSetting the text representative settings
+     * @return returns a document
+     */
+    public Document buildDocument(List<String[]> docPages, TextRepresentativeSetting textSetting) {
+        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_NATIVE_REP_NAME, null, DEFAULT_TEXT_REP_NAME, textSetting);
+    }
+    
+    /**
+     * Build a single document with no native representative
+     * @param docPages a list of LFP page records split on a comma or a semicolon
+     * @param imagesName the name of the image representative
+     * @param textName the name of the text representative
+     * @param textSetting the text representative settings
+     * @return returns a document
+     */
+    public Document buildDocument(List<String[]> docPages, String imagesName, String textName, TextRepresentativeSetting textSetting) {
+        return buildDocument(docPages, imagesName, DEFAULT_NATIVE_REP_NAME, null, textName, textSetting);
+    }
+    
+    /**
+     * Build a single document using the default representative names and with no text representative
+     * @param docPages a list of LFP page records split on a comma or a semicolon
+     * @param nativeLine the LFP native record split on a comma or a semicolon
+     * @return returns a document
+     */
+    public Document buildDocument(List<String[]> docPages, String[] nativeLine) {
+        return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_NATIVE_REP_NAME, nativeLine, DEFAULT_TEXT_REP_NAME, null);
+    }
+    
+    /**
+     * Builds a single document with no text representative 
+     * @param docPages a list of LFP page records split on a comma or a semicolon
+     * @param imagesName the name of the image representative
+     * @param nativeName the name of the native representative
+     * @param nativeLine the LFP native record split on a comma or a semicolon
+     * @return returns a document
+     */
+    public Document buildDocument(List<String[]> docPages, String imagesName, String nativeName, String[] nativeLine) {
+        return buildDocument(docPages, imagesName, nativeName, nativeLine, DEFAULT_TEXT_REP_NAME, null);
+    }
+    
+    /**
+     * Builds a single document 
+     * @param docPages a list of LFP page records split on a comma or a semicolon
+     * @param imagesName the name of the image representative
+     * @param nativeName the name of the native representative
+     * @param nativeLine the LFP native record split on a comma or a semicolon
+     * @param textName the name of the text representative
+     * @param textSetting the text representative settings
+     * @return returns a document
+     */
     public Document buildDocument(List<String[]> docPages, String imagesName, String nativeName, String[] nativeLine, 
             String textName, TextRepresentativeSetting textSetting) {
         // setup for building
@@ -129,7 +266,7 @@ public class LfpBuilder {
         Representative imageRep = null;
         Representative textRep = null;
         Representative nativeRep = null;
-        TextRepresentativeSetting.TextLevel textLevel = textSetting.getTextLevel();
+        TextRepresentativeSetting.TextLevel textLevel = (textSetting != null) ? textSetting.getTextLevel() : TextRepresentativeSetting.TextLevel.None;
         // check if this doc has images or is native only then get document properties
         String key = (docPages.size() > 0) ? docPages.get(0)[KEY_INDEX] : nativeLine[KEY_INDEX];
         String vol = (docPages.size() > 0) ? docPages.get(0)[IMAGE_VOLUME_NAME_INDEX] : nativeLine[NATIVE_VOLUME_NAME_INDEX];
@@ -144,6 +281,7 @@ public class LfpBuilder {
         // get image representative
         if (docPages.size() > 0) {
             Set<String> imageFiles = new LinkedHashSet<>();
+            // note: in the case of a multi-page reference duplicates aren't inserted due to the linked hash set
             docPages.forEach(page -> imageFiles.add(Paths.get(page[IMAGE_FILE_PATH_INDEX], page[IMAGE_FILE_NAME_INDEX]).toString())); 
             imageRep = new Representative();
             imageRep.setName(imagesName);
@@ -201,5 +339,13 @@ public class LfpBuilder {
         doc.setRepresentatives(reps);
         // return built doc
         return doc;
+    }
+    
+    private void setRelationships(Document doc, Document parent) {
+        doc.setParent(parent);
+        // now add this document as a child to the parent
+        List<Document> children = parent.getChildren();
+        children.add(doc);
+        parent.setChildren(children);
     }
 }

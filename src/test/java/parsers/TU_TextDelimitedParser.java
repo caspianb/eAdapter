@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import eAdapter.Document;
 import eAdapter.Representative;
-import parsers.ParserArguments;
 import parsers.TextDelimitedParser;
 
 public class TU_TextDelimitedParser {
