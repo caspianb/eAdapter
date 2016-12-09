@@ -42,9 +42,9 @@ public class OpticonBuilder {
      * @return returns a list of documents
      */
     public List<Document> buildDocuments(List<String[]> lines) {
-        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
-        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
-        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        StructuredRepresentativeSetting textSetting = new StructuredRepresentativeSetting();
+        textSetting.setTextLevel(StructuredRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(StructuredRepresentativeSetting.TextLocation.None);
         return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
@@ -55,9 +55,9 @@ public class OpticonBuilder {
      * @return returns a list of documents
      */
     public List<Document> buildDocuments(List<String[]> lines, String imagesName) {
-        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
-        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
-        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        StructuredRepresentativeSetting textSetting = new StructuredRepresentativeSetting();
+        textSetting.setTextLevel(StructuredRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(StructuredRepresentativeSetting.TextLocation.None);
         return buildDocuments(lines, imagesName, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
@@ -67,7 +67,7 @@ public class OpticonBuilder {
      * @param textSetting the setting used to construct the text representative
      * @return returns a list of documents
      */
-    public List<Document> buildDocuments(List<String[]> lines, TextRepresentativeSetting textSetting) {        
+    public List<Document> buildDocuments(List<String[]> lines, StructuredRepresentativeSetting textSetting) {        
         return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);        
     } 
     
@@ -79,7 +79,7 @@ public class OpticonBuilder {
      * @param textSetting the setting used to construct the text representative
      * @return returns a list of documents
      */
-    public List<Document> buildDocuments(List<String[]> lines, String imagesName, String textName, TextRepresentativeSetting textSetting) {
+    public List<Document> buildDocuments(List<String[]> lines, String imagesName, String textName, StructuredRepresentativeSetting textSetting) {
         // setup for building
         Map<String, Document> docs = new LinkedHashMap<>();
         List<String[]> docPages = new ArrayList<>();
@@ -115,9 +115,9 @@ public class OpticonBuilder {
      * @return returns a single document
      */
     public Document buildDocument(List<String[]> docPages) {
-        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
-        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
-        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        StructuredRepresentativeSetting textSetting = new StructuredRepresentativeSetting();
+        textSetting.setTextLevel(StructuredRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(StructuredRepresentativeSetting.TextLocation.None);
         return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
@@ -128,9 +128,9 @@ public class OpticonBuilder {
      * @return returns a single document
      */
     public Document buildDocument(List<String[]> docPages, String imagesName) {
-        TextRepresentativeSetting textSetting = new TextRepresentativeSetting();
-        textSetting.setTextLevel(TextRepresentativeSetting.TextLevel.None);
-        textSetting.setTextLocation(TextRepresentativeSetting.TextLocation.None);
+        StructuredRepresentativeSetting textSetting = new StructuredRepresentativeSetting();
+        textSetting.setTextLevel(StructuredRepresentativeSetting.TextLevel.None);
+        textSetting.setTextLocation(StructuredRepresentativeSetting.TextLocation.None);
         return buildDocument(docPages, imagesName, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
@@ -140,7 +140,7 @@ public class OpticonBuilder {
      * @param textSetting the setting used to construct the text representative
      * @return returns a single document
      */
-    public Document buildDocument(List<String[]> docPages, TextRepresentativeSetting textSetting) {
+    public Document buildDocument(List<String[]> docPages, StructuredRepresentativeSetting textSetting) {
         return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
@@ -152,10 +152,10 @@ public class OpticonBuilder {
      * @param textSetting the setting used to construct the text representative
      * @return returns a single document
      */
-    public Document buildDocument(List<String[]> docPages, String imagesName, String textName, TextRepresentativeSetting textSetting) {
+    public Document buildDocument(List<String[]> docPages, String imagesName, String textName, StructuredRepresentativeSetting textSetting) {
         // setup for building
         Document doc = new Document();
-        TextRepresentativeSetting.TextLevel textLevel = textSetting.getTextLevel();        
+        StructuredRepresentativeSetting.TextLevel textLevel = textSetting.getTextLevel();        
         // get document properties
         String[] pageOne = docPages.get(0);
         String key = pageOne[IMAGE_KEY_INDEX];

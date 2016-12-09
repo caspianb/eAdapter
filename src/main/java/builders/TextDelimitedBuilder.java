@@ -37,7 +37,7 @@ public class TextDelimitedBuilder {
      */
     public List<Document> buildDocuments(List<String[]> lines, boolean hasHeader,
             String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,
-            List<RepresentativeSetting> repSettings) {
+            List<UnstructuredRepresentativeSetting> repSettings) {
         // setup for building
         String[] header = getHeader(lines.get(0), hasHeader);
         Map<String, Document> docs = new LinkedHashMap<>();
@@ -71,7 +71,7 @@ public class TextDelimitedBuilder {
      * @param representativeSettings representative settings
      * @return returns a document
      */
-    public Document buildDocument(String[] line, String[] header, String keyColumnName, List<RepresentativeSetting> representativeSettings) {
+    public Document buildDocument(String[] line, String[] header, String keyColumnName, List<UnstructuredRepresentativeSetting> representativeSettings) {
         // setup for building
         Document document = new Document();
         // check value size matches the header size
@@ -93,7 +93,7 @@ public class TextDelimitedBuilder {
         if (representativeSettings != null) {
             // setup for populating representatives
             Set<Representative> reps = new LinkedHashSet<>();
-            for (RepresentativeSetting setting : representativeSettings) {
+            for (UnstructuredRepresentativeSetting setting : representativeSettings) {
                 // setup for creating rep properties
                 Representative rep = new Representative();
                 Set<String> files = new LinkedHashSet<>();

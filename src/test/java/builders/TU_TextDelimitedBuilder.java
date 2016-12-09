@@ -39,11 +39,11 @@ public class TU_TextDelimitedBuilder {
         parsedData.add(new String[] { "D004", "D004", "", "V001\\TEXT\\0001\\D004.txt", "" });
         parsedData.add(new String[] { "D005", "", "3E2F1DB06FB1DD42C421ECA8CC0C330D", "", "" });
         
-        List<RepresentativeSetting> reps = new ArrayList<>();
-        RepresentativeSetting nativeRep = new RepresentativeSetting();
+        List<UnstructuredRepresentativeSetting> reps = new ArrayList<>();
+        UnstructuredRepresentativeSetting nativeRep = new UnstructuredRepresentativeSetting();
         nativeRep.setColumn(NATIVE_REP_COL);
         nativeRep.setType(Representative.Type.NATIVE);
-        RepresentativeSetting textRep = new RepresentativeSetting();
+        UnstructuredRepresentativeSetting textRep = new UnstructuredRepresentativeSetting();
         textRep.setColumn(TEXT_REP_COL);
         textRep.setType(Representative.Type.TEXT);
         reps.add(nativeRep);

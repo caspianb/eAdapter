@@ -2,7 +2,7 @@ package builders;
 
 import eAdapter.Representative;
 
-public class RepresentativeSetting {
+public class UnstructuredRepresentativeSetting {
     private String representativeColumn;
     private String representativeName = "default";
     private Representative.Type representativeType;

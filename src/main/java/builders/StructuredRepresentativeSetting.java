@@ -13,7 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * @version December 2016
  *
  */
-public class TextRepresentativeSetting {
+public class StructuredRepresentativeSetting {
     
     private final String TEXT_EXT = ".txt";
     

@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import builders.LfpBuilder;
-import builders.TextRepresentativeSetting;
+import builders.StructuredRepresentativeSetting;
 import eAdapter.Document;
 
 /**
@@ -39,7 +39,7 @@ public class LfpImporter {
      * @param textSetting the text representative settings
      * @return returns a list of documents
      */
-    public List<Document> importDocuments(Path filePath, TextRepresentativeSetting textSetting) {
+    public List<Document> importDocuments(Path filePath, StructuredRepresentativeSetting textSetting) {
         try {
             List<String> lines = Files.readAllLines(filePath);
             LfpBuilder builder = new LfpBuilder();
@@ -59,7 +59,7 @@ public class LfpImporter {
      * @param textSetting the text representative settings
      * @return returns a list of documents
      */
-    public List<Document> importDocuments(Path filePath, String imagesName, String nativeName, String textName, TextRepresentativeSetting textSetting) {
+    public List<Document> importDocuments(Path filePath, String imagesName, String nativeName, String textName, StructuredRepresentativeSetting textSetting) {
         try {
             List<String> lines = Files.readAllLines(filePath);
             LfpBuilder builder = new LfpBuilder();

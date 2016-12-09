@@ -95,7 +95,7 @@ public class LfpBuilder {
      * @param textSetting the text representative settings
      * @return returns a list of documents
      */
-    public List<Document> buildDocuments(List<String> lines, TextRepresentativeSetting textSetting) {
+    public List<Document> buildDocuments(List<String> lines, StructuredRepresentativeSetting textSetting) {
         return buildDocuments(lines, DEFAULT_IMAGE_REP_NAME, DEFAULT_NATIVE_REP_NAME, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
@@ -108,7 +108,7 @@ public class LfpBuilder {
      * @param textSetting the text representative settings
      * @return returns a list documents
      */
-    public List<Document> buildDocuments(List<String> lines, String imagesName, String nativeName, String textName, TextRepresentativeSetting textSetting) {
+    public List<Document> buildDocuments(List<String> lines, String imagesName, String nativeName, String textName, StructuredRepresentativeSetting textSetting) {
         // setup for building
         Map<String, Document> docs = new LinkedHashMap<>(); // maps key to document
         List<String[]> docPages = new ArrayList<>(); // all page records for a single document
@@ -211,7 +211,7 @@ public class LfpBuilder {
      * @param textSetting the text representative settings
      * @return returns a document
      */
-    public Document buildDocument(List<String[]> docPages, TextRepresentativeSetting textSetting) {
+    public Document buildDocument(List<String[]> docPages, StructuredRepresentativeSetting textSetting) {
         return buildDocument(docPages, DEFAULT_IMAGE_REP_NAME, DEFAULT_NATIVE_REP_NAME, null, DEFAULT_TEXT_REP_NAME, textSetting);
     }
     
@@ -223,7 +223,7 @@ public class LfpBuilder {
      * @param textSetting the text representative settings
      * @return returns a document
      */
-    public Document buildDocument(List<String[]> docPages, String imagesName, String textName, TextRepresentativeSetting textSetting) {
+    public Document buildDocument(List<String[]> docPages, String imagesName, String textName, StructuredRepresentativeSetting textSetting) {
         return buildDocument(docPages, imagesName, DEFAULT_NATIVE_REP_NAME, null, textName, textSetting);
     }
     
@@ -260,13 +260,13 @@ public class LfpBuilder {
      * @return returns a document
      */
     public Document buildDocument(List<String[]> docPages, String imagesName, String nativeName, String[] nativeLine, 
-            String textName, TextRepresentativeSetting textSetting) {
+            String textName, StructuredRepresentativeSetting textSetting) {
         // setup for building
         Document doc = new Document();
         Representative imageRep = null;
         Representative textRep = null;
         Representative nativeRep = null;
-        TextRepresentativeSetting.TextLevel textLevel = (textSetting != null) ? textSetting.getTextLevel() : TextRepresentativeSetting.TextLevel.None;
+        StructuredRepresentativeSetting.TextLevel textLevel = (textSetting != null) ? textSetting.getTextLevel() : StructuredRepresentativeSetting.TextLevel.None;
         // check if this doc has images or is native only then get document properties
         String key = (docPages.size() > 0) ? docPages.get(0)[KEY_INDEX] : nativeLine[KEY_INDEX];
         String vol = (docPages.size() > 0) ? docPages.get(0)[IMAGE_VOLUME_NAME_INDEX] : nativeLine[NATIVE_VOLUME_NAME_INDEX];
@@ -289,17 +289,17 @@ public class LfpBuilder {
             imageRep.setFiles(imageFiles);
         }
         // get text representative
-        if (!textLevel.equals(TextRepresentativeSetting.TextLevel.None)) {
+        if (!textLevel.equals(StructuredRepresentativeSetting.TextLevel.None)) {
             Set<String> textFiles = new LinkedHashSet<>();
             // add textFiles
-            if (textLevel.equals(TextRepresentativeSetting.TextLevel.Page)) {
+            if (textLevel.equals(StructuredRepresentativeSetting.TextLevel.Page)) {
                 docPages.forEach(page -> {
                     String imagePath = Paths.get(page[IMAGE_FILE_PATH_INDEX], page[IMAGE_FILE_NAME_INDEX]).toString();
                     String textFile = textSetting.getTextPathFromImagePath(imagePath); 
                     textFiles.add(textFile);
                 });                
             }
-            else if (textLevel.equals(TextRepresentativeSetting.TextLevel.Doc)) {
+            else if (textLevel.equals(StructuredRepresentativeSetting.TextLevel.Doc)) {
                 String[] firstPageInfo = docPages.get(0);
                 String imagePath = Paths.get(firstPageInfo[IMAGE_FILE_PATH_INDEX], firstPageInfo[IMAGE_FILE_NAME_INDEX]).toString();
                 String textFile = textSetting.getTextPathFromImagePath(imagePath);
