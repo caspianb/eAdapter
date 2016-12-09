@@ -4,7 +4,7 @@ import eAdapter.Representative;
 
 public class RepresentativeSetting {
     private String representativeColumn;
-    private String representativeName;
+    private String representativeName = "default";
     private Representative.Type representativeType;
 
     public void setColumn(String column) {
