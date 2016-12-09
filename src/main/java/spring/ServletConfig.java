@@ -4,8 +4,6 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomi
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import csvparser.CSVParser;
-
 @Configuration
 public class ServletConfig {
 
@@ -14,11 +12,6 @@ public class ServletConfig {
         return (container -> {
             //container.setPort(0);
         });
-    }
-
-    @Bean
-    public CSVParser csvParser() {
-        return new CSVParser();
     }
 
 }
