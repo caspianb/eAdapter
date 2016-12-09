@@ -45,7 +45,7 @@ public class TextDelimitedBuilder {
         String childSeparator = StringUtils.defaultIfBlank(childColumnDelimiter, ";");
         // build the documents
         for (String[] line : lines) {
-            if (hasHeader) {
+            if (hasHeader && lines.indexOf(line) == 0) {
                 continue; // skip header line
             }
             // build a document
@@ -75,7 +75,7 @@ public class TextDelimitedBuilder {
         // setup for building
         Document document = new Document();
         // check value size matches the header size
-        if (header.length == line.length) {
+        if (header.length != line.length) {
             throw new RuntimeException("The value size does not match the header size.");
         }        
         // populate metadata
@@ -118,7 +118,7 @@ public class TextDelimitedBuilder {
             // if we have a parent column name
             String parentKey = doc.getMetadata().get(parentColumnName);
             // check that the parentKey doesn't refer to itself
-            if (parentKey.equals(doc.getKey()) || StringUtils.isBlank(parentKey)) {
+            if (StringUtils.isBlank(parentKey) || parentKey.equals(doc.getKey())) {
                 // the parentid value refers to itself or there is no parent
                 // do nothing here
             }
