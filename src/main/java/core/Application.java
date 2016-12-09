@@ -12,12 +12,13 @@ public class Application {
     public static void main(String[] args) {
         ApplicationContext ctx = SpringApplication.run(Application.class, args);
 
-        System.out.println("Let's inspect the beans provided by Spring Boot:");
+        printBeansInContext(ctx);
+    }
 
-        String[] beanNames = ctx.getBeanDefinitionNames();
-        Arrays.sort(beanNames);
-        for (String beanName : beanNames) {
-            System.out.println(" - " + beanName);
-        }
+    protected static void printBeansInContext(ApplicationContext ctx) {
+        System.out.println("Let's inspect the beans provided by Spring Boot:");
+        Arrays.stream(ctx.getBeanDefinitionNames())
+                .sorted()
+                .forEach(beanName -> System.out.println(" - " + beanName));
     }
 }
