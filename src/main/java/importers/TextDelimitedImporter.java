@@ -3,6 +3,8 @@ package importers;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import builders.TextDelimitedBuilder;
 import builders.UnstructuredRepresentativeSetting;
 import csvparser.CSVParser;
@@ -17,6 +19,11 @@ import parsers.Delimiters;
  * Purpose: Imports documents from a text delimited file. 
  */
 public class TextDelimitedImporter {
+    @Autowired
+    protected CSVParser parser;
+    @Autowired
+    protected TextDelimitedBuilder builder;
+
     /**
      * Imports documents from a text delimited file
      * @param filePath path to the text delimited file
@@ -32,9 +39,7 @@ public class TextDelimitedImporter {
     public List<Document> importDocuments(Path filePath, Delimiters delimiters, boolean hasHeader,
             String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,
             List<UnstructuredRepresentativeSetting> repSettings) {
-        CSVParser parser = new CSVParser();
         List<String[]> parsedData = parser.parse(filePath, delimiters);
-        TextDelimitedBuilder builder = new TextDelimitedBuilder();
         return builder.buildDocuments(parsedData, hasHeader, keyColumnName, parentColumnName, childColumnName, childColumnDelimiter, repSettings);
     }
 

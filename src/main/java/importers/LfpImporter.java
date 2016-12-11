@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import builders.LfpBuilder;
 import builders.StructuredRepresentativeSetting;
 import eAdapter.Document;
@@ -17,6 +19,9 @@ import eAdapter.Document;
  * Purpose: Imports documents from a LFP file
  */
 public class LfpImporter {
+    @Autowired
+    protected LfpBuilder builder;
+
     /**
      * Imports a LFP file using the default representative names with no text representative
      * @param filePath the path to the LFP file
@@ -25,7 +30,6 @@ public class LfpImporter {
     public List<Document> importDocuments(Path filePath) {
         try {
             List<String> lines = Files.readAllLines(filePath);
-            LfpBuilder builder = new LfpBuilder();
             return builder.buildDocuments(lines);
         }
         catch (IOException ex) {
@@ -42,7 +46,6 @@ public class LfpImporter {
     public List<Document> importDocuments(Path filePath, StructuredRepresentativeSetting textSetting) {
         try {
             List<String> lines = Files.readAllLines(filePath);
-            LfpBuilder builder = new LfpBuilder();
             return builder.buildDocuments(lines, textSetting);
         }
         catch (IOException ex) {
@@ -62,7 +65,6 @@ public class LfpImporter {
     public List<Document> importDocuments(Path filePath, String imagesName, String nativeName, String textName, StructuredRepresentativeSetting textSetting) {
         try {
             List<String> lines = Files.readAllLines(filePath);
-            LfpBuilder builder = new LfpBuilder();
             return builder.buildDocuments(lines, imagesName, nativeName, textName, textSetting);
         }
         catch (IOException ex) {
