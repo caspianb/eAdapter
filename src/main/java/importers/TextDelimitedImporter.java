@@ -29,7 +29,7 @@ public class TextDelimitedImporter {
      * @param repSettings a list of representative settings
      * @return returns a list of documents
      */
-    public List<Document> importTextDelimited(Path filePath, Delimiters delimiters, boolean hasHeader,
+    public List<Document> importDocuments(Path filePath, Delimiters delimiters, boolean hasHeader,
             String keyColumnName, String parentColumnName, String childColumnName, String childColumnDelimiter,
             List<UnstructuredRepresentativeSetting> repSettings) {
         CSVParser parser = new CSVParser();
