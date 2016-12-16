@@ -80,15 +80,18 @@ public class OpticonExporter {
         else {
             int counter = 0;
             for (String file : imageRep.getFiles()) {
+                // ImageKey,VolumeName,FullPath,DocBreak,BoxBreak,FolderBreak,PageCount
                 String record = String.format(
-                        "%s,%s,%s,%s,%s,%s,%s\n", // ImageKey,VolumeName,FullPath,DocBreak,BoxBreak,FolderBreak,PageCount
+                        "%1$s%8$s%2$s%8$s%3$s%8$s%4$s%8$s%5$s%8$s%6$s%8$s%7$s%9$s",
                         document.getKey(),
                         volumeName,
                         file,
                         (counter == 0) ? TRUE_VALUE : FALSE_VALUE,
                         FALSE_VALUE,
                         FALSE_VALUE,
-                        (counter == 0) ? imageRep.getFiles().size() : FALSE_VALUE);
+                        (counter == 0) ? imageRep.getFiles().size() : FALSE_VALUE,
+                        delimiters.getFieldSeparator(),
+                        delimiters.getNewRecord());
                 counter++;
                 pageRecords.add(record);
             }
